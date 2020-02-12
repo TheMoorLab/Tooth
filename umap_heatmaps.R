@@ -2,6 +2,7 @@
 # Umap of clusters
 # heatmaps 
 library(dplyr)
+library(ggplot2)
 
 ###########################################################################################################################
 ################################################### Combined ##############################################################
@@ -46,6 +47,12 @@ par(xpd=TRUE)
 	# scale_colour_manual('Clusters', values = custom_color_squeme[mct_ids], labels = new.cluster.ids[mct_ids])
 dev.off()
 
+# By perio/pulp only (combining all patient from each condition)
+pdf(file = file.path("/IMCR_shares/Moorlab/Common/Tooth_project/R_analysis/ldvr_analyses", "Perio_Pulp_Clusters_bycondition.pdf"), width=16, height=12)
+par(xpd=TRUE)
+	DimPlot(merged_harmony, reduction = "umap", label = FALSE, pt.size = 0.5, group.by = "condition")
+dev.off()
+
 
 ##########################################################################################################################
 ################################################### Perio ################################################################
@@ -68,7 +75,7 @@ par(xpd=TRUE)
 dev.off()
 
 # Clusters named according to cell type
-# Ensure cell identities are clusters before running the code below
+# IMPORTANT: Ensure cell identities are clusters before running the code below
 Idents(object = all_perio) <- "clustering"
 
 # Import clusters' cell type assignments and pre-defined custom color squeme
@@ -95,16 +102,16 @@ all_perio@active.ident 		= factor(x = all_perio@active.ident, levels = my_mct_le
 #########################################################################################################################################################
 # PLOT CLUSTERS WITH LABELS ACCORDING TO DECREASING POP SIZE order
 # Cluster labels
-pdf(file = file.path("/IMCR_shares/Moorlab/Common/Tooth_project/R_analysis/ldvr_analyses/AllPerio", "Clusters_ct_labels_pop_size_ordered.pdf"), width=12, height=12)
+pdf(file = file.path("/IMCR_shares/Moorlab/Common/Tooth_project/R_analysis/ldvr_analyses/AllPerio", "Clusters_ct_labels_pop_size_ordered_pt1_5.pdf"), width=12, height=12)
 par(xpd=TRUE)
-	DimPlot(all_perio, reduction = "umap", label = TRUE, pt.size = 0.5)+
+	DimPlot(all_perio, reduction = "umap", label = TRUE, pt.size = 1.5)+
 	scale_colour_manual('Clusters', values = custom_color_squeme[mct_ids], labels = new.cluster.ids[mct_ids])
 dev.off()
 
 # Cluster numbers 
 pdf(file = file.path("/IMCR_shares/Moorlab/Common/Tooth_project/R_analysis/ldvr_analyses/AllPerio", "Clusters_ct_nums_pop_size_ordered_new.pdf"), width=12, height=12)
 par(xpd=TRUE)
-	DimPlot(all_perio, reduction = "umap", label = TRUE, pt.size = 0.5)+
+	DimPlot(all_perio, reduction = "umap", label = TRUE, pt.size = 1)+
 	scale_colour_manual('Clusters', values = custom_color_squeme[mct_ids],)
 dev.off()
 
@@ -113,12 +120,30 @@ dev.off()
 # For correct heatmap, FindAllMarkers has to be applied to the Seurat object with the correct RE-LEVELED cluster groups
 all.markers.perio = FindAllMarkers(all_perio, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
 top10perio 		  = all.markers.perio %>% group_by(cluster) %>% top_n(n = 10, wt = avg_logFC)
+top5perio 		  = all.markers.perio %>% group_by(cluster) %>% top_n(n = 5, wt = avg_logFC)
 
 pdf(file = file.path("/IMCR_shares/Moorlab/Common/Tooth_project/R_analysis/ldvr_analyses/AllPerio", "Heatmap_pop_size_ordered_genes.pdf"), width=24, height=12)
 par(xpd=TRUE)
 DoHeatmap(object = all_perio, angle = 45, slot = "scale.data", features = top10perio$gene, group.by= "groups_bysize")
 dev.off()
 
+# Multi-bar heatmap: 
+meta_color_squeme 						= c(custom_color_squeme[mct_ids][1], custom_color_squeme[mct_ids][6], custom_color_squeme[mct_ids][8], custom_color_squeme[mct_ids][9], custom_color_squeme[mct_ids][10], custom_color_squeme[mct_ids][13], custom_color_squeme[mct_ids][14])
+cols.use 								= list(ordered_clustering=custom_color_squeme[mct_ids], groups_bysize = meta_color_squeme )
+all_perio@meta.data$ordered_clustering  = all_perio@active.ident
+
+pdf(file = file.path("/IMCR_shares/Moorlab/Common/Tooth_project/R_analysis/ldvr_analyses/AllPerio", "Heatmap_pop_size_ordered_genes_double_bar.pdf"), width=24, height=28)
+par(xpd=TRUE)
+DoMultiBarHeatmap(all_perio, features=top5perio$gene , group.by='groups_bysize', additional.group.by = 'ordered_clustering', additional.group.sort.by = 'ordered_clustering', cols.use=cols.use ) +
+  theme(text = element_text(size = 20))+ guides( color = FALSE, size = FALSE)
+  	# , legend.position = "none") 
+dev.off()
+
+
+pdf(file = file.path("/IMCR_shares/Moorlab/Common/Tooth_project/R_analysis/ldvr_analyses/AllPerio", "Heatmap_pop_size_ordered_subcellclusters.pdf"), width=24, height=12)
+par(xpd=TRUE)
+DoHeatmap(object = all_perio, angle = 45, slot = "scale.data", features = top10perio$gene, group.by= "ordered_clustering")
+dev.off()
 
 ##########################################################################################################################
 #################################################### Pulp ################################################################
@@ -137,7 +162,7 @@ dev.off()
 pdf(file = file.path("/IMCR_shares/Moorlab/Common/Tooth_project/R_analysis/ldvr_analyses/AllPulp", "Features.pdf"), width=16, height=10)
 par(xpd=TRUE)
 	FeaturePlot(all_healthy,features=c("THY1","MYH11","COL1A1","KRT14","PECAM1","PTPRC","MBP","GFRA3","MS4A1","SPOCK3", "SOX10"), 
-		reduction = "umap",order = T)
+		reduction = "umap", order = T)
 dev.off()
 
 # Clusters named according to cell type
@@ -154,7 +179,7 @@ custom_color_squeme  		= as.character(CTasgns_pulp$colors)
 # This is important to be able to order levels below according to most populous meta cell type 
 match_cl_ct 	= cbind.data.frame(cluster = CTasgns_pulp$cluster, metaCT = CTasgns_pulp$metaCellType)
 cell_cl_id 		= all_healthy@meta.data$clustering 
-metaCT 			= match_cl_ct[match(cell_cl_id, match_cl_ct[,"clusterx"]),2]
+metaCT 			= match_cl_ct[match(cell_cl_id, match_cl_ct[,"cluster"]),2]
 all_healthy$groups = metaCT
 metaCT_size 	= factor(metaCT, levels = names(sort(table(metaCT), decreasing =TRUE)))
 all_healthy$groups_bysize = metaCT_size
@@ -185,18 +210,39 @@ dev.off()
 # For correct heatmap, FindAllMarkers has to be applied to the Seurat object with the correct RE-LEVELED cluster groups
 all.markers.releveled = FindAllMarkers(all_healthy, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
 
-top20 				  = all.markers %>% group_by(cluster) %>% top_n(20, avg_logFC)
+# top20 				  = all.markers %>% group_by(cluster) %>% top_n(20, avg_logFC)
 DoHeatmap(object = all_healthy, genes.use = top20$gene, slim.col.label = TRUE, remove.key = TRUE)
 top10 				  = all.markers.releveled %>% group_by(cluster) %>% top_n(n = 10, wt = avg_logFC)
+
+top5 				  = all.markers.releveled %>% group_by(cluster) %>% top_n(n = 5, wt = avg_logFC)
+
 
 pdf(file = file.path("/IMCR_shares/Moorlab/Common/Tooth_project/R_analysis/ldvr_analyses/AllPulp", "Heatmap_pop_size_ordered_genes.pdf"), width=24, height=12)
 par(xpd=TRUE)
 DoHeatmap(object = all_healthy, angle = 45, slot = "scale.data", features = top10$gene, group.by= "groups_bysize")
 dev.off()
 
+meta_color_squeme_pulp 					  = c(custom_color_squeme[mct_ids][1], custom_color_squeme[mct_ids][7], custom_color_squeme[mct_ids][12], custom_color_squeme[mct_ids][15], custom_color_squeme[mct_ids][20], custom_color_squeme[mct_ids][21], custom_color_squeme[mct_ids][22], custom_color_squeme[mct_ids][23], custom_color_squeme[mct_ids][24])
+cols.use 								  = list(ordered_clustering=custom_color_squeme[mct_ids], groups_bysize = meta_color_squeme_pulp )
+all_healthy@meta.data$ordered_clustering  = all_healthy@active.ident
+
+pdf(file = file.path("/IMCR_shares/Moorlab/Common/Tooth_project/R_analysis/ldvr_analyses/AllPulp", "Heatmap_pop_size_ordered_genes_double_bar.pdf"), width=24, height=28)
+par(xpd=TRUE)
+DoMultiBarHeatmap(all_healthy, features=top5$gene , size = 6, group.by='groups_bysize', additional.group.by = 'ordered_clustering', additional.group.sort.by = 'ordered_clustering', cols.use=cols.use ) +
+  theme(text = element_text(size = 20))+ guides( color = FALSE, size = FALSE)
+  	# , legend.position = "none") 
+dev.off()
+
+pdf(file = file.path("/IMCR_shares/Moorlab/Common/Tooth_project/R_analysis/ldvr_analyses/AllPulp", "Heatmap_pop_size_ordered_clusters.pdf"), width=24, height=20)
+par(xpd=TRUE)
+DoHeatmap(object = all_healthy, angle = 45, slot = "scale.data", features = top10$gene, group.by= "ordered_clustering")
+dev.off()
+
+################################################################## Save data #############################################################################
+
 save.image(file = "perio_pulp_merged_20191220.Rdata")
 
-#########################################################################################################################################################
+##########################################################################################################################################################
 ############################################################## COMBINED PULP AND PERIO ###################################################################
 # PROPORTIONS
 # FOR MERGED DATASET OF PULP AND PERIO
@@ -223,6 +269,26 @@ ggplot(merged_harmony@meta.data, aes(x=groups_bysize, fill=condition)) +
        title="Proportion of sample for each cell type", fill = "Sample") + 
   theme(axis.text.x = element_text(face = "bold", size = 12, angle = 45, hjust = 1), axis.title=element_text(size=14,face="bold"))
 ggsave(filename = "/IMCR_shares/Moorlab/Common/Tooth_project/R_analysis/ldvr_analyses/Combined_proportions_perio_pulp.pdf")
+
+#plot as proportion or percentage of cluster normalized by number of cells in perio or pulp ( since it's disproportionate towards more pulp)
+melted_celltype_condition  		   = cbind.data.frame(cellType =merged_harmony@meta.data$groups_bysize, condition=merged_harmony@meta.data$condition)
+melted_celltype_by_condition 	   = as.data.frame.matrix(table(melted_celltype_condition))
+cellType_normalized_by_condition   = as.data.frame(t(melted_celltype_by_condition)/rowSums(t(melted_celltype_by_condition)))
+
+datm2 <- cellType_normalized_by_condition %>% 
+  mutate(ind = factor(row_number())) %>% 
+  gather(variable, value, -ind)
+
+ggplot(datm2, aes(x = variable, y = value, fill = ind)) + 
+    geom_bar(position = "fill",stat = "identity") +
+    # or:
+    # geom_bar(position = position_fill(), stat = "identity") 
+    scale_y_continuous(labels = scales::percent_format())+
+     	labs(x="Cell type", y="Normalized proportion",
+       title="Proportion of cell type from sample (normalized)", fill = "Sample") +
+     	  scale_fill_manual(labels = c("Perio", "Pulp"), values = c("blue", "red")) +
+     	   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+ggsave(filename = "/IMCR_shares/Moorlab/Common/Tooth_project/R_analysis/ldvr_analyses/Normalized_proportions_perio_pulp.pdf")
 
 
 
