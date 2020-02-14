@@ -50,12 +50,21 @@ celltype_props_by_sample = cbind.data.frame(prop= merged_props$value, CTsample =
 v_names 				 = data.frame(CTsample=vertex_names)
 ordered_props 			 = join(v_names, celltype_props_by_sample)
 # Because the range of cell type proportions is very wide and the node size variation would too large to plot, we compress the values through a ln transform 
-compress_sizes 		     =  log(1000*ordered_props$prop)
+compress_sizes 		     = log(1000*ordered_props$prop) # the 1000 scaling is just so there are no values betwee 0 and 1 which would lead to a negative value after the log transform. 
 
 # Force-directed graph layout of distance matrix
+# Nodes are normalized by cell type proportion (relative to perio or pulp sample sizes)
 dist_mi <- 1-dist_mat2  # 1 as qgraph takes similarity matrices as input
 pdf(file = file.path("/IMCR_shares/Moorlab/Common/Tooth_project/R_analysis/ldvr_analyses/PseudobulkCorrs", 
 	"PerioPulpEjaccard_FDGL_normalized_node_sizes.pdf"), width=16, height=16)
 # qgraph(dist_mi, layout='spring', vsize=3, groups = test, legend = TRUE)
-qgraph(dist_mi, layout='spring', vsize=compress_sizes, nodeNames = vertex_names, groups = cc_collapsed_ids, legend.mode="style2")
+qgraph(dist_mi, layout='spring', vsize=compress_sizes, color = c(rep('blue',length(cc_collapsed_ids[1])), rep('red', length(cc_collapsed_ids[2]))),  nodeNames = vertex_names, groups = cc_collapsed_ids, legend.mode="style2")
+dev.off()
+
+# Force-directed graph layout of distance matrix (node sizes are all equal)
+dist_mi <- 1-dist_mat2  # 1 as qgraph takes similarity matrices as input
+pdf(file = file.path("/IMCR_shares/Moorlab/Common/Tooth_project/R_analysis/ldvr_analyses/PseudobulkCorrs", 
+	"PerioPulpEjaccard_FDGL_fixed_node_sizes.pdf"), width=16, height=16)
+# qgraph(dist_mi, layout='spring', vsize=3, groups = test, legend = TRUE)
+qgraph(dist_mi, layout='spring', vsize=3, nodeNames = vertex_names, groups = cc_collapsed_ids, legend.mode="style2")
 dev.off()
