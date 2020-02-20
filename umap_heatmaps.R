@@ -112,8 +112,14 @@ dev.off()
 pdf(file = file.path("/IMCR_shares/Moorlab/Common/Tooth_project/R_analysis/ldvr_analyses/AllPerio", "Clusters_ct_nums_pop_size_ordered_new.pdf"), width=12, height=12)
 par(xpd=TRUE)
 	DimPlot(all_perio, reduction = "umap", label = TRUE, pt.size = 1)+
-	scale_colour_manual('Clusters', values = custom_color_squeme[mct_ids],)
+	scale_colour_manual('Clusters', values = custom_color_squeme[mct_ids])
 dev.off()
+
+# Create an array with the subclusters to add to meta.data (useful for future plots)
+match_cl_ct 	= cbind.data.frame(cluster = CTasgns_perio$cluster, metaCT = CTasgns_perio$cellType)
+cell_cl_id 		= all_perio@meta.data$clustering 
+metaCT 			= match_cl_ct[match(cell_cl_id, match_cl_ct[,"cluster"]),2]
+
 
 #########################################################################################################################################################
 # HEATMAPS
