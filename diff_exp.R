@@ -1,43 +1,37 @@
 # differential gene expression between pulp and perio in combined dataset
 # ex cellTypeChar = "Epithelial"
-diff_exp_by_subpop <- function( cellTypeChar ){
 library(ggplot2)
-# library(cowplot)
-# theme_set(theme_cowplot())
+
 Idents(object = merged_harmony) <- "groups_bysize"
-cellType <- subset(merged_harmony, idents = cellTypeChar)
-Idents(cellType) <- "condition"
-# avg.cellType <- log1p(AverageExpression(cellType, verbose = FALSE, return.seurat = TRUE)$RNA)
-# avg.cellType$gene <- rownames(avg.cellType)
-
-# DoHeatmap(avg.cellType, features = unlist(TopFeatures(pbmc[["pca"]], balanced = TRUE)), size = 3, 
-#     draw.lines = FALSE)
-
-# genes.to.label = c("ISG15", "LY6E", "IFI6", "ISG20", "MX1", "IFIT2", "IFIT1", "CXCL10", "CCL8")
-# p1 <- ggplot(avg.cellType, aes(perio, pulp)) + geom_point() + ggtitle("Epithelial cells")
-# p1 <- LabelPoints(plot = p1, points = genes.to.label, repel = TRUE)
-
-# Combine cell type with condition label
 merged_harmony$celltype.cond = paste(Idents(merged_harmony), merged_harmony$condition, sep = "_")
-DefaultAssay(merged_harmony) = "RNA"
-Idents(merged_harmony) 	 	 = "celltype.cond"
-epithelial_by_cond 		     = FindMarkers(merged_harmony, ident.1 = paste0(cellTypeChar, "_perio"), ident.2 = paste0(cellTypeChar, "_pulp"), verbose = FALSE)
-head(epithelial_by_cond, n = 15)
-epithelial_by_cond$gene 	 = rownames(epithelial_by_cond)
-top_epithelial				 = top_n(epithelial_by_cond[order(epithelial_by_cond$p_val_adj),], n = 50, wt = avg_logFC)
-# top_epithelial$gene
 
-# cluster.averages <- AverageExpression(object = cellType, return.seurat = TRUE)
+diff_exp_by_subpop <- function( cellTypeChar ){
 
-g = DoHeatmap(object = cellType, angle = 45, slot = "scale.data", features = top_epithelial$gene, group.by= "condition", group.colors = c("blue", "red") )
-ggsave(plot = g, filename = file.path("/IMCR_shares/Moorlab/Common/Tooth_project/R_analysis/ldvr_analyses", 
+cellType <- subset(merged_harmony, idents = cellTypeChar)
+
+DefaultAssay(cellType) 		 = "RNA"
+Idents(cellType) 	 	 	 = "celltype.cond"
+cellType_by_cond 		     = FindMarkers(cellType, ident.1 = paste0(cellTypeChar, "_perio"), ident.2 = paste0(cellTypeChar, "_pulp"), verbose = FALSE)
+head(cellType_by_cond, n = 15)
+cellType_by_cond$gene 	 	 = rownames(cellType_by_cond)
+top_cellType1				 = top_n(cellType_by_cond[order(cellType_by_cond$p_val_adj),], n = 50, wt = avg_logFC) # overexpressed in ident.1 (perio)
+top_cellType2				 = top_n(cellType_by_cond[order(cellType_by_cond$p_val_adj),], n = -50, wt = avg_logFC) # overexp. in ident.2 (pulp) 
+
+# test = rbind.data.frame(top_cellType1, top_cellType2)
+
+g = DoHeatmap(object = cellType, angle = 45, slot = "scale.data", features = c(top_cellType1$gene,top_cellType2$gene), group.by= "condition", group.colors = c("blue", "red") )
+	ggsave(plot = g, filename = file.path("/IMCR_shares/Moorlab/Common/Tooth_project/R_analysis/ldvr_analyses", 
 	paste0("Heatmap_", cellTypeChar,"_bycondition.pdf")), width=16, height=20)
 
-
-
-top_epithelial
+list(perio_high = top_cellType1, pulp_high = top_cellType2)
 
 }
+
+# To run:
+# fibro_perio_pulp 		= diff_exp_by_subpop("Fibroblasts")
+# epi_perio_pulp 		= diff_exp_by_subpop("Epithelial")
+# msc_perio_pulp 		= diff_exp_by_subpop("MSC")
+# immu_perio_pulp 		= diff_exp_by_subpop("Immune")
 
 # After running the above analysis for epithelial, immune, MSCs and fibroblasts, save the results of the differential gene expression for each of the those cases:
 # save(list=c("epi_perio_pulp", "immu_perio_pulp", "msc_perio_pulp", "fibro_perio_pulp"), file=file.path("/IMCR_shares/Moorlab/Common/Tooth_project/R_analysis/ldvr_analyses", "dge.RData"))
