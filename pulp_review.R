@@ -57,9 +57,8 @@ VlnPlot(all_healthy, features = c("nFeature_RNA"),
         pt.size = 0.2, ncol = 4) + theme(axis.title = element_text(size = 20), axis.text= element_text(size = 20)) 
 ggsave(filename = file.path("/IMCR_shares/Moorlab/Common/Tooth_project/R_analysis/ldvr_analyses/AllPulp/PostReview/", "nFeature_postsubset.pdf"),  width=10, height=8)
 
-
-
-
+# Normalize counts data from RNA slot as this is important for DGE downstream since we don't do DGE on SCT transformed data
+all_healthy<- NormalizeData(all_healthy, assay = 'RNA')
 
 # # run sctransform
 # all_healthy <- SCTransform(all_healthy, vars.to.regress = "percent.mt", verbose = TRUE)
