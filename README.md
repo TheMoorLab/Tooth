@@ -16,9 +16,13 @@ Data pertaining the above publication can be found at GEO. Access number: GSE161
 # Code description: 
 R:
 20191129_healthy_pulp.R       : Pre-processing of single-cell data from pulp samples only
+
 20191204_perio.R              : Pre-processing of single-cell data from periodontium samples only
+
 20191204_merged_perio_pulp.R  : Pre-processing of single-cell data from pulp and periodontium samples together
+
 Dis_graph.R                   : Extended Jaccard similarity between pulp and perio sampels plotted as a force directed graph layout 
+
 Dis_graph_review.R            : Same as above but pairs of smallest distances were ranked from smallest to largest for visualization purposes
 DoMultiBarHeatmap.R           : Code to allow multiple identities to be visualized as a bar on for of an ordered heatmap
 Mean_median_table_pulp_perio.R: Statistics on pulp and periodontium cell population sizes and genes per cell 
