@@ -14,7 +14,7 @@ doi: https://doi.org/10.1101/2021.02.19.431962
 Data pertaining the above publication can be found at GEO. Access number: GSE161267
 
 # Code description: 
-R:
+R code:
 
 20191129_healthy_pulp.R       : Pre-processing of single-cell data from pulp samples only
 
@@ -44,7 +44,7 @@ umaps_supp.R                  : Supplementary umap plots
 
 perio_review.R and pulp_review.R were run to adjust the original labels in 20191129_healthy_pulp.R and 20191204_perio.R after re-naming of original file names to Perio 1-5 and Pulp 1-5 according to GEO submission
 
-Python:
+Python code:
 
 velocity_perio_step2_scvelo.py              : Velocity estimate for periodontium samples (part 1 done in R)
 
