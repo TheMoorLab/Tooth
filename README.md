@@ -1,4 +1,4 @@
-# Tooth
+# A single cell atlas of human teeth
 Healthy periodontium and pulp single-cell data
 
 # Citation
